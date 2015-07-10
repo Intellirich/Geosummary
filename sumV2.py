@@ -73,9 +73,12 @@ def max_stat(in_table, in_field, in_stat_field):
     return maxDict
 
 
-def choose_stat(func):
-    function_dict = {'sum': sum_stat, 'mean': mean_stat, 'min': min_stat, 'max': max_stat}
-    return function_dict, function_dict[func](table, sum_field, stat_field)
+def choose_stat(func_string):
+    func_list = func_string.split()
+    for func in func_list:
+        function_dict = {'sum': sum_stat, 'mean': mean_stat, 'min': min_stat, 'max': max_stat}
+        #print function_dict, function_dict[func](table, sum_field, stat_field)
+        return function_dict, function_dict[func](table, sum_field, stat_field)
 
 
 def choose_output(out_format):
@@ -84,26 +87,34 @@ def choose_output(out_format):
 
 
 
-def clean_dict(stat):
-    function_dict, funx = choose_stat(stat)
-    stat_dict = function_dict[stat](table, sum_field, stat_field)
-    for k in stat_dict.keys():
-        new_k = k.rstrip()
-        stat_dict[new_k] = stat_dict.pop(k)
-    #print stat_dict
-    return stat_dict
+def clean_dict(stat_string):
+    stat_list = stat_string.split()
+    for stat in stat_list:
+        function_dict, func = choose_stat(stat)
+        stat_dict = function_dict[stat](table, sum_field, stat_field)
+        for k in stat_dict.keys():
+            new_k = k.rstrip()
+            stat_dict[new_k] = stat_dict.pop(k)
+        #print stat_dict
+        return stat_dict
 
 
-def write_csv(fnx, field, table, out_path):
-    dct = clean_dict(fnx)
-    tbl, fields = read_table(table)
-    i_field = fields.index(field)
-    complete_path = os.path.join(out_path, fnx + '.csv')
-    with open(complete_path, 'wb') as out_csv:
-        writer = csv.writer(out_csv)
-        writer.writerow([fields[i_field], fnx])
-        for key, value in dct.items():
-            writer.writerow([key, value])
+def write_csv(fnx_string, field, table, out_path):
+    fnx_list = fnx_string.split()
+    for fnx in fnx_list:
+        dct = clean_dict(fnx)
+        tbl, fields = read_table(table)
+        i_field = fields.index(field)
+        complete_path = os.path.join(out_path, 'summary.csv')
+        with open(complete_path, 'rb') as in_csv, open(complete_path, 'wb') as out_csv:
+            reader = csv.reader(in_csv)
+            writer = csv.writer(out_csv)
+            for fnx in fnx_list:
+                writer.writerow([fields[i_field], fnx])
+                for row in reader:
+                    for key, value in dct.items():
+                        writer.writerow([key, value])
+                    writer.writerow(row + value)
     return out_csv
 
 
@@ -135,7 +146,8 @@ if __name__ == "__main__":
     table = "07_confini"
     sum_field = "descrizion"
     stat_field = "area"
-    save_path = raw_input("where do you want to save your file: ")
+    save_path = "/Users/riccardo/Documents/progetti/summarize"
+    #save_path = raw_input("where do you want to save your file: ")
     createKeyValueList(table, sum_field, stat_field)
     funx = raw_input('Which statistics do you want to compute? ')
     choose_stat(funx)
